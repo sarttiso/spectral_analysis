@@ -7,8 +7,8 @@
 % where X(t) is the time series we observe and W(t) is the whitenened time 
 % series we can recover by applying the coefficients "in reverse", allowing
 % us to recover n-p samples of W(t).
-% The current implementation uses arburg to estimate the lag coefficients
-% of the given process.
+% The current implementation uses ARfit() to estimate the lag coefficients
+% of the given process from the frequency domain.
 % 
 % IN:
 % ts: input time series. must be a vector in the current implementation
@@ -24,7 +24,7 @@
 %   general way to implement prewhitening by restricting the set of
 %   coefficients a(1)...a(p)
 %
-% Adrian Tasistro-Hart, adrianraph-at-gmail.com, 04.08.2018
+% Adrian Tasistro-Hart, adrianraph-at-gmail.com, 09.08.2018
 
 function ws = prewhiten(ts,varargin)
 
@@ -43,12 +43,18 @@ p = parser.Results.p;
 n = length(ts);
 % make sure have enough samples
 assert(n>p,'need enough samples for given order')
+% make column
+ts = ts(:);
 
 % fit AR(p) process to time series
-ab = arburg(ts,p);
-a = -ab(2:end);
-% make column
-a = a(:);
+% ab = arburg(ts,p);
+% a = -ab(2:end);
+% % make column
+% a = a(:);
+
+% fit autoregressive coefficients from spectrum
+[pxx,w] = pmtm(detrend(ts),2,[],1);
+a = ARfit(p,w,pxx,1/2);
 
 % with AR(p) parameters, subtract weighted observations from ts to generate
 % ws

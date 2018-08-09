@@ -7,3 +7,7 @@ For computing spectrograms:
 
 For processing time series:
 - **prewhiten**: prewhitens a time series by fitting an AR(p) model and inverse filtering the time series to obtain a whitened version of the series.
+
+TO DO:
+- [ ] Implement pchavegram (just a copy of mtgram right now)
+- [ ] Generalize prewhiten for any FIR filters

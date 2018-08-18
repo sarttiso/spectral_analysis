@@ -12,10 +12,16 @@
 % 
 % IN:
 % ts: input time series. must be a vector in the current implementation
-% 'p': (default 4) order of the AR(p) process to fit
+% 'process': (default 'ar') 'ar' or 'pink'; type of spectrum to fit to
+%   background spectrum of time series
+% 'ncoeff': (default 4) number of coefficients to fit either to
+%   AR(p) process or to pink noise process
+% 'nw': (default 2) time half bandwidth product for computing spectrum from
+%   which the lag coefficients are estimated
 %
 % OUT:
 % ws: whitened time series
+% a: lag coefficients used for prewhitening
 %
 % TO DO:
 % - could be generalized to prewhitening by any sort of autoregressive
@@ -26,23 +32,30 @@
 %
 % Adrian Tasistro-Hart, adrianraph-at-gmail.com, 09.08.2018
 
-function ws = prewhiten(ts,varargin)
+function [ws,a] = prewhiten(ts,varargin)
 
 % parse inputs
 parser = inputParser;
 validScalarPosNum = @(x) isnumeric(x) && isscalar(x) && (x > 0);
 addRequired(parser,'ts',@isnumeric)
-addParameter(parser,'p',4,validScalarPosNum);
+addParameter(parser,'process','ar',@ischar)
+addParameter(parser,'ncoeff',4,validScalarPosNum);
+addParameter(parser,'nw',2,validScalarPosNum);
 
 parse(parser,ts,varargin{:})
 
 ts = parser.Results.ts;
-p = parser.Results.p;
+process = parser.Results.process;
+ncoeff = parser.Results.ncoeff;
+nw = parser.Results.nw;
+
+% validate process
+process = validatestring(process,{'ar','pink'});
 
 % number of samples
 n = length(ts);
 % make sure have enough samples
-assert(n>p,'need enough samples for given order')
+assert(n>ncoeff,'need enough samples for given order')
 % make column
 ts = ts(:);
 
@@ -52,18 +65,26 @@ ts = ts(:);
 % % make column
 % a = a(:);
 
-% fit autoregressive coefficients from spectrum
-[pxx,w] = pmtm(detrend(ts),2,[],1);
-a = ARfit(p,w,pxx,1/2);
+% estimate spectrum from time series (not going to detrend, assume user has
+% done so already)
+[pxx,w] = pmtm(ts,nw,[],1);
+
+switch process
+    case 'ar'
+        a = ARfit(ncoeff,w,pxx,1/2);
+    case 'pink'
+        A = pinkfit(w,pxx);
+        a = pinkcoeff(A,'ncoeff',ncoeff);
+end
 
 % with AR(p) parameters, subtract weighted observations from ts to generate
 % ws
 ws = zeros(n,1);
-for ii = n:-1:p+1
-    ws(ii) = ts(ii) - sum(flipud(a).*ts(ii-p:ii-1));
+for ii = n:-1:ncoeff+1
+    ws(ii) = ts(ii) - sum(flipud(a).*ts(ii-ncoeff:ii-1));
 end
 % truncate ws
-ws = ws(p+1:end);
+ws = ws(ncoeff+1:end);
 
 
 end

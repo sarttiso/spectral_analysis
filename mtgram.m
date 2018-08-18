@@ -5,13 +5,13 @@
 % window: size of window in samples for sliding window
 % 'noverlap': size of overlap in samples
 % 'f': frequencies
-% 'fs': smapling frequency
+% 'fs': sampling frequency
 % 'ax': handle to axis in which to plot
 %
 % OUT:
-% pxx:
-% w:
-% t:
+% pxx: power spectral density estimate
+% w: frequencies
+% t: time axis with windows centered at each point in time
 %
 % TO DO:
 % - finish commenting and cleaning up
@@ -91,8 +91,8 @@ Y(:,end) = detrend(y(end-window+1:end));
 % get time axis
 dt = 1/fs;
 tw = (window-noverlap) * dt; % spacing of time axis
-t1 = window/2 * dt;
-t2 = (n - window/2) * dt;
+t1 = (window-1)/2 * dt;
+t2 = ( (n-1) - (window-1)/2 ) * dt;
 t = t1:tw:t2;
 t(end) = t2;
 

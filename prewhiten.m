@@ -18,6 +18,7 @@
 %   AR(p) process or to pink noise process
 % 'nw': (default 2) time half bandwidth product for computing spectrum from
 %   which the lag coefficients are estimated
+% 'a': user-specified lag-coefficients
 %
 % OUT:
 % ws: whitened time series
@@ -30,7 +31,7 @@
 %   general way to implement prewhitening by restricting the set of
 %   coefficients a(1)...a(p)
 %
-% Adrian Tasistro-Hart, adrianraph-at-gmail.com, 09.08.2018
+% Adrian Tasistro-Hart, adrianraph-at-gmail.com, 20.08.2018
 
 function [ws,a] = prewhiten(ts,varargin)
 
@@ -41,6 +42,7 @@ addRequired(parser,'ts',@isnumeric)
 addParameter(parser,'process','ar',@ischar)
 addParameter(parser,'ncoeff',4,validScalarPosNum);
 addParameter(parser,'nw',2,validScalarPosNum);
+addParameter(parser,'a',[],@isnumeric);
 
 parse(parser,ts,varargin{:})
 
@@ -48,6 +50,7 @@ ts = parser.Results.ts;
 process = parser.Results.process;
 ncoeff = parser.Results.ncoeff;
 nw = parser.Results.nw;
+a = parser.Results.a;
 
 % validate process
 process = validatestring(process,{'ar','pink'});
@@ -65,16 +68,22 @@ ts = ts(:);
 % % make column
 % a = a(:);
 
-% estimate spectrum from time series (not going to detrend, assume user has
-% done so already)
-[pxx,w] = pmtm(ts,nw,[],1);
+% only estimate coefficients if user has not specified them
+if isempty(a)
+    % estimate spectrum from time series (not going to detrend, assume user
+    % has done so already)
+    [pxx,w] = pmtm(ts,nw,[],1);
 
-switch process
-    case 'ar'
-        a = ARfit(ncoeff,w,pxx,1/2);
-    case 'pink'
-        A = pinkfit(w,pxx);
-        a = pinkcoeff(A,'ncoeff',ncoeff);
+    switch process
+        case 'ar'
+            a = ARfit(ncoeff,w,pxx,1/2);
+        case 'pink'
+            A = pinkfit(w,pxx);
+            a = pinkcoeff(A,'ncoeff',ncoeff);
+    end
+
+else
+    ncoeff = length(a);
 end
 
 % with AR(p) parameters, subtract weighted observations from ts to generate

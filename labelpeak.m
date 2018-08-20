@@ -9,6 +9,8 @@
 % 'stdf': (default 0) uncertainty in frequency, 1 standard deviation 
 % 'fontsize': (default 9)
 % 'plotline': (default false) plot a vertical line intersecting the peak
+% 'backgroundcolor': (default 'none')
+% 'fontweight': (default 'normal')
 %
 % OUT:
 % htxt: handle to the label text
@@ -31,6 +33,8 @@ addParameter(parser,'align','right',@ischar)
 addParameter(parser,'stdf',0,validScalarPosNum)
 addParameter(parser,'fontsize',9,validScalarPosNum)
 addParameter(parser,'plotline',0,@(x) x==1 || x==0)
+addParameter(parser,'backgroundcolor','none')
+addParameter(parser,'fontweight','normal')
 
 parse(parser,f,yloc,varargin{:})
 
@@ -40,6 +44,8 @@ aln = parser.Results.align;
 stdf = parser.Results.stdf;
 fontsize = parser.Results.fontsize;
 plotline = parser.Results.plotline;
+bgcolor = parser.Results.backgroundcolor;
+fontweight = parser.Results.fontweight;
 
 % validate alignment
 aln = validatestring(aln,{'left','right','center'});
@@ -58,6 +64,7 @@ end
 
 htxt = text(f,yloc,txt,'fontsize',fontsize,...
     'HorizontalAlignment',aln,'VerticalAlignment','bottom',...
-    'BackgroundColor','none','Margin',1);
+    'BackgroundColor','none','Margin',1,'BackgroundColor',bgcolor,...
+    'FontWeight',fontweight);
 
 end

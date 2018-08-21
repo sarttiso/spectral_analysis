@@ -31,7 +31,7 @@
 %   general way to implement prewhitening by restricting the set of
 %   coefficients a(1)...a(p)
 %
-% Adrian Tasistro-Hart, adrianraph-at-gmail.com, 20.08.2018
+% Adrian Tasistro-Hart, adrianraph-at-gmail.com, 21.08.2018
 
 function [ws,a] = prewhiten(ts,varargin)
 
@@ -79,7 +79,9 @@ if isempty(a)
             a = ARfit(ncoeff,w,pxx,1/2);
         case 'pink'
             A = pinkfit(w,pxx);
-            a = pinkcoeff(A,'ncoeff',ncoeff);
+            a = pinkcoeff(A,ncoeff,'filter','ar');
+            % convert from matlab convention to Percival Walden convention
+            a = -a(2:end);
     end
 
 else

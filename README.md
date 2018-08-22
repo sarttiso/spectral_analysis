@@ -10,4 +10,4 @@ For processing time series:
 
 TO DO:
 - [ ] Implement pchavegram (just a copy of mtgram right now)
-- [ ] Generalize prewhiten for any FIR filters
+- [x] Generalize prewhiten for any FIR filters

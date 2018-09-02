@@ -10,8 +10,8 @@
 % 'plotit': (true) whether to plot the spectrogram
 %
 % OUT:
-% pxx: power spectral density estimate
-% w: frequencies
+% p: power spectral density estimate
+% f: frequencies
 % t: time axis with windows centered at each point in time
 %
 % TO DO:
@@ -19,7 +19,7 @@
 %
 % Adrian Tasistro-Hart, adrianraph-at-gmail.com, 02.09.2018
 
-function [pxx,w,t] = plombgram(x,y,window,varargin)
+function [p,f,t] = plombgram(x,y,window,varargin)
 
 %% parse
 parser = inputParser;
@@ -55,9 +55,9 @@ assert(window < n,'window is larger than length of data')
 % make window an integer
 window = double(window);
 
-% if no value for overlp, make 50%
+% if no value for overlap, make one less than window length
 if isempty(noverlap)
-    noverlap = window/2;
+    noverlap = window-1;
 % otherwise make sure that overlap is less than the window
 else
     assert(noverlap < window, 'overlap must be less than window length')
@@ -95,8 +95,16 @@ X(:,end) = x(end-window+1:end);
 
 % compute Lomb-Scargle estimates
 pxx = zeros(nfft,nslides);
+w = zeros(nfft,nslides);
 for ii = 1:nslides
-    [pxx(:,ii),w] = plomb(Y(:,ii),X(:,ii),f);
+    [pxx(:,ii),w(:,ii)] = plomb(Y(:,ii),X(:,ii),f);
+end
+
+% interpolate onto consistent and oversampled frequency axis
+f = linspace(min(w(:)),max(w(:)),2*nfft);
+p = zeros(2*nfft,nslides);
+for ii = 1:nslides
+    p(:,ii) = interp1(w(:,ii),pxx(:,ii),f,'linear');
 end
 
 % get time axis; need center of each group of coordinates
@@ -113,9 +121,9 @@ if plotit
         axes(ax)
     end
 
-    surf(w,t,10*log10(abs(pxx')+eps),'edgecolor','none')
+    surf(f,t,10*log10(abs(p')+eps),'edgecolor','none')
     view(2)
-    xlim([min(w) max(w)])
+    xlim([min(f) max(f)])
     ylim([min(t) max(t)])
     set(gca,'xscale','log')
 

@@ -7,6 +7,7 @@
 % 'noverlap': size of overlap in samples
 % 'f': frequencies at which to sample
 % 'ax': handle to axis in which to plot
+% 'plotit': (true) whether to plot the spectrogram
 %
 % OUT:
 % pxx: power spectral density estimate
@@ -14,9 +15,9 @@
 % t: time axis with windows centered at each point in time
 %
 % TO DO:
-% - finish commenting and cleaning up
+% - 
 %
-% Adrian Tasistro-Hart, adrianraph-at-gmail.com, 01.09.2018
+% Adrian Tasistro-Hart, adrianraph-at-gmail.com, 02.09.2018
 
 function [pxx,w,t] = plombgram(x,y,window,varargin)
 
@@ -25,9 +26,10 @@ parser = inputParser;
 addRequired(parser,'x',@isnumeric);
 addRequired(parser,'y',@isnumeric);
 addRequired(parser,'window',@isscalar);
-addOptional(parser,'noverlap',[],@isscalar);
-addOptional(parser,'f',[],@isnumeric);
-addOptional(parser,'axis',[],@ishandle);
+addParameter(parser,'noverlap',[],@isscalar);
+addParameter(parser,'f',[],@isnumeric);
+addParameter(parser,'axis',[],@ishandle);
+addParameter(parser,'plotit',true,@islogical);
 
 parse(parser,x,y,window,varargin{:});
 
@@ -37,6 +39,7 @@ window = parser.Results.window;
 noverlap = parser.Results.noverlap;
 f = parser.Results.f;
 ax = parser.Results.axis;
+plotit = parser.Results.plotit;
     
 
 %% set dynamic defaults and validate
@@ -72,6 +75,7 @@ else
     nfft = length(f);
 end
 
+
 %% window and compute psds
 
 % array of windowed signals
@@ -98,19 +102,26 @@ end
 % get time axis; need center of each group of coordinates
 t = mean(X);
 
+
 %% plot
-if isempty(ax)
-    figure
-else
-    axes(ax)
+
+if plotit
+    
+    if isempty(ax)
+        figure
+    else
+        axes(ax)
+    end
+
+    surf(w,t,10*log10(abs(pxx')+eps),'edgecolor','none')
+    view(2)
+    xlim([min(w) max(w)])
+    ylim([min(t) max(t)])
+    set(gca,'xscale','log')
+
+    colormap(jet)
+
 end
 
-surf(w,t,10*log10(abs(pxx')+eps),'edgecolor','none')
-view(2)
-xlim([min(w) max(w)])
-ylim([min(t) max(t)])
-set(gca,'xscale','log')
-
-colormap(jet)
 
 end

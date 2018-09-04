@@ -3,7 +3,7 @@
 % y: signal
 % nw: time-halfbandwidth product
 % window: size of window in samples for sliding window
-% 'noverlap': size of overlap in samples
+% 'noverlap': (default window-1) size of overlap in samples
 % 'f': frequencies
 % 'fs': sampling frequency
 % 'ax': handle to axis in which to plot
@@ -25,10 +25,10 @@ parser = inputParser;
 addRequired(parser,'y',@isnumeric);
 addRequired(parser,'nw',@isscalar);
 addRequired(parser,'window',@isscalar);
-addOptional(parser,'noverlap',[],@isscalar);
-addOptional(parser,'f',[],@isnumeric);
-addOptional(parser,'fs',1,@isscalar);
-addOptional(parser,'axis',[],@ishandle);
+addParameter(parser,'noverlap',[],@isscalar);
+addParameter(parser,'f',[],@isnumeric);
+addParameter(parser,'fs',1,@isscalar);
+addParameter(parser,'axis',[],@ishandle);
 
 parse(parser,y,nw,window,varargin{:});
 
@@ -54,9 +54,9 @@ assert(window < n,'window is larger than length of data')
 % make window an integer
 window = double(window);
 
-% if no value for overlp, make 50%
+% if no value for overlp, make 1 less than window
 if isempty(noverlap)
-    noverlap = window/2;
+    noverlap = window-1;
 % otherwise make sure that overlap is less than the window
 else
     assert(noverlap < window, 'overlap must be less than window length')

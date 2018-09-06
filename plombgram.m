@@ -8,6 +8,8 @@
 % 'f': frequencies at which to sample
 % 'ax': handle to axis in which to plot
 % 'plotit': (true) whether to plot the spectrogram
+% 'taper': (default: boxcar)taper to apply to each window of the data, must
+%   be same length as window 
 %
 % OUT:
 % p: power spectral density estimate
@@ -30,6 +32,7 @@ addParameter(parser,'noverlap',[],@isscalar);
 addParameter(parser,'f',[],@isnumeric);
 addParameter(parser,'axis',[],@ishandle);
 addParameter(parser,'plotit',true,@islogical);
+addParameter(parser,'taper',[],@isnumeric);
 
 parse(parser,x,y,window,varargin{:});
 
@@ -40,6 +43,7 @@ noverlap = parser.Results.noverlap;
 f = parser.Results.f;
 ax = parser.Results.axis;
 plotit = parser.Results.plotit;
+taper = parser.Results.taper;
     
 
 %% set dynamic defaults and validate
@@ -75,6 +79,12 @@ else
     nfft = length(f);
 end
 
+% validate taper
+if isempty(taper)
+    taper = ones(window,1);
+end
+assert(length(taper) == window, 'taper must be same length as window')
+
 
 %% window and compute psds
 
@@ -86,11 +96,16 @@ X = zeros(window,nslides);
 for ii = 1:nslides-1
     lidx = round( (ii-1)*(window-noverlap)+1 );
     ridx = round( ii*window-(ii-1)*(noverlap) );
-    Y(:,ii) = detrend(x(lidx:ridx),y(lidx:ridx));
+    xint = linspace(x(lidx),x(ridx),window);
+    taperint = interp1(xint,taper,x(lidx:ridx),'linear');
     X(:,ii) = x(lidx:ridx);
+    Y(:,ii) = detrend(x(lidx:ridx),y(lidx:ridx)).*taperint;
+    
 end
 % do last window
-Y(:,end) = detrend(x(end-window+1:end),y(end-window+1:end));
+xint = linspace(x(end-window+1),x(end),window);
+taperint = interp1(xint,taper,x(end-window+1:end),'linear');
+Y(:,end) = detrend(x(end-window+1:end),y(end-window+1:end)).*taperint;
 X(:,end) = x(end-window+1:end);
 
 % compute Lomb-Scargle estimates
@@ -131,5 +146,8 @@ if plotit
 
 end
 
+if nargout == 0
+    clear p f t
+end
 
 end

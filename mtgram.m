@@ -7,6 +7,7 @@
 % 'f': frequencies
 % 'fs': sampling frequency
 % 'ax': handle to axis in which to plot
+% 'plotit': (true) whether to plot the spectrogram
 %
 % OUT:
 % pxx: power spectral density estimate
@@ -29,6 +30,7 @@ addParameter(parser,'noverlap',[],@isscalar);
 addParameter(parser,'f',[],@isnumeric);
 addParameter(parser,'fs',1,@isscalar);
 addParameter(parser,'axis',[],@ishandle);
+addParameter(parser,'plotit',true,@islogical);
 
 parse(parser,y,nw,window,varargin{:});
 
@@ -39,6 +41,7 @@ noverlap = parser.Results.noverlap;
 f = parser.Results.f;
 fs = parser.Results.fs;
 ax = parser.Results.axis;
+plotit = parser.Results.plotit;
     
 %% set dynamic defaults and validate
 
@@ -97,17 +100,24 @@ t = t1:tw:t2;
 t(end) = t2;
 
 %% plot
-if isempty(ax)
-    figure
-else
-    axes(ax)
-end
-surf(w,t,10*log10(abs(pxx')+eps),'edgecolor','none')
-view(2)
-xlim([min(f) max(f)])
-ylim([min(t) max(t)])
-set(gca,'xscale','log')
 
-colormap(jet)
+if plotit
+    if isempty(ax)
+        figure
+    else
+        axes(ax)
+    end
+    surf(w,t,10*log10(abs(pxx')+eps),'edgecolor','none')
+    view(2)
+    xlim([min(f) max(f)])
+    ylim([min(t) max(t)])
+    set(gca,'xscale','log')
+
+    colormap(jet)
+end
+
+if nargout == 0
+    clear pxx w t
+end
 
 end

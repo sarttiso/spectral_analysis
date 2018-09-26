@@ -8,6 +8,8 @@
 % 'fs': sampling frequency
 % 'ax': handle to axis in which to plot
 % 'plotit': (true) whether to plot the spectrogram
+% 'time_origin': (0), first time point in time series for correct labeling
+%   of the time axis
 %
 % OUT:
 % pxx: power spectral density estimate
@@ -31,6 +33,8 @@ addParameter(parser,'f',[],@isnumeric);
 addParameter(parser,'fs',1,@isscalar);
 addParameter(parser,'axis',[],@ishandle);
 addParameter(parser,'plotit',true,@islogical);
+addParameter(parser,'time_origin',0,@isscalar);
+
 
 parse(parser,y,nw,window,varargin{:});
 
@@ -42,6 +46,7 @@ f = parser.Results.f;
 fs = parser.Results.fs;
 ax = parser.Results.axis;
 plotit = parser.Results.plotit;
+t_ori = parser.Results.time_origin;
     
 %% set dynamic defaults and validate
 
@@ -98,6 +103,8 @@ t1 = (window-1)/2 * dt;
 t2 = ( (n-1) - (window-1)/2 ) * dt;
 t = t1:tw:t2;
 t(end) = t2;
+% add origin
+t = t + t_ori;
 
 %% plot
 
